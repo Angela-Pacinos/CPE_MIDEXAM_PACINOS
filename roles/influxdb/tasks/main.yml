@@ -1,0 +1,20 @@
+- name: install influxdb
+  apt:
+    name: influxdb
+    state: present
+    become: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: install influxdb
+  yum:
+    name: influxdb
+    state: present
+    become: yes
+  when: ansible_distribution == "CentOS"
+
+- name: influxdb restarting / enabling
+  service:
+    name: influxdb
+    state: restarted
+    enabled: yes
+  become: yes

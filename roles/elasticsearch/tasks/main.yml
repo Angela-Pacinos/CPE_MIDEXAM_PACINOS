@@ -1,0 +1,85 @@
+- name: adding elastic search repository key
+  apt_key:
+    url: "https://packages.elastic.co/GPG-KEY-elasticsearch"
+    state: present
+  when: ansible_distribution == "Ubuntu"
+
+- name: installing apt repository
+  apt:
+    name: apt-transport-https
+    state: present
+  when: ansible_distribution == "Ubuntu"
+
+- name: add elastic search repository
+  apt_repository:
+    repo: deb https://artifacts.elastic.co/packages/7.x/apt stable main
+    state: present
+  when: ansible_distribution == "Ubuntu"
+
+- name: install elastic search (Ubuntu)
+  apt:
+    name: elasticsearch
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: updating the configuration file to allow outside access
+  lineinfile:
+    destfile: /etc/elasticsearch/elasticsearch.yml
+    regexp: 'network.host:'
+    line: 'network.host: 0.0.0.0'
+  when: ansible_distribution == "Ubuntu"
+
+- name: updating port in configuration file
+  lineinfile:
+    destfile: /etc/elasticsearch/elasticsearch.yml
+    regexp: 'http.port:'
+    line: 'http.port: 9200'
+  when: ansible_distribution == "Ubuntu"
+
+- name: updating the config file to allow outside access
+  lineinfile:
+    destfile: /etc/elasticsearch/elasticsearch.yml
+    regexp: 'cluster.initial_master_nodes:'
+    line: 'cluster.initial_master_nodes: ["{{ ansible_default_ipv4.address }}"]'
+  when: ansible_distribution == "Ubuntu"
+
+- name: install the prerequisites
+  yum:
+    name:
+      - java-1.8.0-openjdk
+      - epel-release
+      - wget
+      - which
+    state: present
+  when: ansible_distribution == "CentOS"
+
+- name: add elastic search rpm repository
+  shell: rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+  when: ansible_distribution == "CentOS"
+
+- name: add elastic search repository
+  copy:
+    content: |
+      [elasticsearch-7.x]
+      name=Elasticsearch repository for 7.x packages
+      baseurl=https://artifacts.elastic.co/packages/7.x/yum
+      gpgcheck=1
+      gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      enabled=1
+      autorefresh=1
+      type=rpm-md
+    dest: /etc/yum.repos.d/elasticsearch.repo
+  when: ansible_distribution == "CentOS"
+
+- name: install elastic search (CentOS)
+  yum:
+    name: elasticsearch
+    state: present
+  when: ansible_distribution == "CentOS"
+
+- name: elastic search restarting / enabling
+  service:
+    name: elasticsearch
+    state: restarted
+    enabled: true
+

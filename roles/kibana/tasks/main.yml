@@ -1,0 +1,20 @@
+- name: install kibana (Ubuntu)
+  apt:
+    name: kibana
+    state: present
+  become: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: install kibana (CentOS)
+  yum:
+    name: kibana
+    state: present
+  become: yes
+  when: ansible_distribution == "CentOS"
+
+- name: kibana restarting / enabling
+  systemd:
+    name: kibana
+    enabled: yes
+    state: started
+  become: yes
